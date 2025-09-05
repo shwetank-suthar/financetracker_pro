@@ -1,46 +1,5 @@
 import openai from './openaiClient';
 
-/**
- * Generates financial insights using GPT-5.
- * @param {Object} financialData - User's financial data
- * @param {string} analysisType - Type of analysis: 'spending', 'investment', 'budget', 'general'
- * @returns {Promise<Object>} AI-generated insights
- */
-export async function generateFinancialInsights(financialData, analysisType = 'general') {
-  const systemPrompts = {
-    spending: 'You are a financial advisor specializing in spending analysis. Analyze spending patterns, identify areas for optimization, and provide actionable recommendations.',
-    investment: 'You are an investment advisor. Analyze investment portfolios, assess risk levels, suggest diversification strategies, and provide market insights.',
-    budget: 'You are a budgeting expert. Help users create realistic budgets, track spending against goals, and optimize financial allocation.',
-    general: 'You are a comprehensive financial advisor. Provide holistic financial guidance covering spending, saving, investing, and budgeting.'
-  };
-
-  try {
-    const response = await openai?.chat?.completions?.create({
-      model: 'gpt-5',
-      messages: [
-        { 
-          role: 'system', 
-          content: systemPrompts?.[analysisType] || systemPrompts?.general
-        },
-        { 
-          role: 'user', 
-          content: `Analyze my financial data and provide insights: ${JSON.stringify(financialData)}` 
-        },
-      ],
-      reasoning_effort: 'high', // Deep financial analysis
-      verbosity: 'medium', // Balanced detail
-    });
-
-    return {
-      insights: response?.choices?.[0]?.message?.content,
-      analysisType,
-      timestamp: new Date()?.toISOString(),
-    };
-  } catch (error) {
-    console.error('Error generating financial insights:', error);
-    throw error;
-  }
-}
 
 /**
  * Generates structured financial recommendations.
@@ -370,6 +329,200 @@ export async function streamFinancialAnalysis(userMessage, financialData, onChun
     console.error('Error streaming financial analysis:', error);
     throw error;
   }
+}
+
+/**
+ * Generates comprehensive financial insights for dashboard.
+ * @param {Object} data - User's financial data (expenses, accounts, investments, goals)
+ * @returns {Promise<Object>} AI-generated insights
+ */
+export async function generateFinancialInsights(data) {
+  try {
+    const response = await openai?.chat?.completions?.create({
+      model: 'gpt-4o-mini', // Using available model
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a financial advisor providing comprehensive insights. Analyze spending patterns, identify savings opportunities, suggest expense optimizations, and provide investment advice. Be specific and actionable.' 
+        },
+        { 
+          role: 'user', 
+          content: `Analyze my financial data and provide insights: ${JSON.stringify(data)}` 
+        },
+      ],
+    });
+
+    const insights = response?.choices?.[0]?.message?.content;
+    
+    // Parse and structure the insights
+    return {
+      savingsRecommendations: extractSavingsRecommendations(insights),
+      expenseOptimization: extractExpenseOptimization(insights),
+      investmentAdvice: extractInvestmentAdvice(insights),
+      fullInsights: insights,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error generating financial insights:', error);
+    // Return fallback insights
+    return {
+      savingsRecommendations: "Consider reviewing your monthly subscriptions and dining expenses for potential savings.",
+      expenseOptimization: "Track your spending patterns to identify areas where you can reduce costs.",
+      investmentAdvice: "Diversify your portfolio across different asset classes for better risk management.",
+      fullInsights: "AI insights temporarily unavailable. Please try again later.",
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Generates daily expense insights.
+ * @param {Object} data - Daily expense data
+ * @returns {Promise<Object>} Daily insights
+ */
+export async function generateDailyExpenseInsights(data) {
+  try {
+    const response = await openai?.chat?.completions?.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a daily expense analyst. Provide insights on spending patterns, suggest savings tips, and give budget recommendations for the day.' 
+        },
+        { 
+          role: 'user', 
+          content: `Analyze my daily expenses: ${JSON.stringify(data)}` 
+        },
+      ],
+    });
+
+    const insights = response?.choices?.[0]?.message?.content;
+    
+    return {
+      spendingAnalysis: extractSpendingAnalysis(insights),
+      savingsTips: extractSavingsTips(insights),
+      budgetRecommendations: extractBudgetRecommendations(insights),
+      fullInsights: insights,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error generating daily expense insights:', error);
+    return {
+      spendingAnalysis: "Review your daily spending patterns to identify trends.",
+      savingsTips: "Consider setting daily spending limits for better control.",
+      budgetRecommendations: "Track all expenses to maintain budget discipline.",
+      fullInsights: "Daily insights temporarily unavailable.",
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Generates investment planning advice.
+ * @param {Object} portfolio - Investment portfolio data
+ * @param {Array} goals - Financial goals
+ * @returns {Promise<Object>} Investment planning advice
+ */
+export async function generateInvestmentPlanningAdvice(portfolio, goals = []) {
+  try {
+    const response = await openai?.chat?.completions?.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are an investment planning advisor. Provide specific advice on portfolio optimization, goal-based investing, and future financial planning.' 
+        },
+        { 
+          role: 'user', 
+          content: `Provide investment planning advice for portfolio: ${JSON.stringify(portfolio)} and goals: ${JSON.stringify(goals)}` 
+        },
+      ],
+    });
+
+    const advice = response?.choices?.[0]?.message?.content;
+    
+    return {
+      portfolioOptimization: extractPortfolioOptimization(advice),
+      goalBasedAdvice: extractGoalBasedAdvice(advice),
+      futurePlanning: extractFuturePlanning(advice),
+      fullAdvice: advice,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error generating investment planning advice:', error);
+    return {
+      portfolioOptimization: "Consider rebalancing your portfolio based on your risk tolerance.",
+      goalBasedAdvice: "Align your investments with your specific financial goals.",
+      futurePlanning: "Plan for long-term financial security through diversified investments.",
+      fullAdvice: "Investment advice temporarily unavailable.",
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+// Helper functions to extract specific insights
+function extractSavingsRecommendations(insights) {
+  // Simple extraction - in production, use more sophisticated parsing
+  if (insights.includes('save') || insights.includes('savings')) {
+    return insights.substring(0, 200) + '...';
+  }
+  return "Review your spending patterns to identify potential savings opportunities.";
+}
+
+function extractExpenseOptimization(insights) {
+  if (insights.includes('expense') || insights.includes('spending')) {
+    return insights.substring(0, 200) + '...';
+  }
+  return "Optimize your expenses by tracking and categorizing your spending.";
+}
+
+function extractInvestmentAdvice(insights) {
+  if (insights.includes('invest') || insights.includes('portfolio')) {
+    return insights.substring(0, 200) + '...';
+  }
+  return "Consider diversifying your investment portfolio for better returns.";
+}
+
+function extractSpendingAnalysis(insights) {
+  if (insights.includes('spending') || insights.includes('expense')) {
+    return insights.substring(0, 150) + '...';
+  }
+  return "Analyze your daily spending to identify patterns and opportunities.";
+}
+
+function extractSavingsTips(insights) {
+  if (insights.includes('save') || insights.includes('tip')) {
+    return insights.substring(0, 150) + '...';
+  }
+  return "Set daily spending limits and track all expenses for better savings.";
+}
+
+function extractBudgetRecommendations(insights) {
+  if (insights.includes('budget') || insights.includes('recommend')) {
+    return insights.substring(0, 150) + '...';
+  }
+  return "Create a realistic budget based on your income and expenses.";
+}
+
+function extractPortfolioOptimization(advice) {
+  if (advice.includes('portfolio') || advice.includes('optimize')) {
+    return advice.substring(0, 150) + '...';
+  }
+  return "Optimize your portfolio allocation based on your risk tolerance.";
+}
+
+function extractGoalBasedAdvice(advice) {
+  if (advice.includes('goal') || advice.includes('target')) {
+    return advice.substring(0, 150) + '...';
+  }
+  return "Align your investments with your specific financial goals.";
+}
+
+function extractFuturePlanning(advice) {
+  if (advice.includes('future') || advice.includes('plan')) {
+    return advice.substring(0, 150) + '...';
+  }
+  return "Plan for long-term financial security through strategic investing.";
 }
 
 /**

@@ -8,6 +8,7 @@ const ExpenseFilters = ({ onFiltersChange, totalExpenses }) => {
   const [filters, setFilters] = useState({
     search: '',
     category: '',
+    paymentMethod: '',
     dateFrom: '',
     dateTo: '',
     minAmount: '',
@@ -29,6 +30,18 @@ const ExpenseFilters = ({ onFiltersChange, totalExpenses }) => {
     { value: 'other', label: 'Other' }
   ];
 
+  const paymentMethods = [
+    { value: '', label: 'All Payment Methods' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'credit-card', label: 'Credit Card' },
+    { value: 'debit-card', label: 'Debit Card' },
+    { value: 'upi', label: 'UPI' },
+    { value: 'net-banking', label: 'Net Banking' },
+    { value: 'wallet', label: 'Digital Wallet' },
+    { value: 'cheque', label: 'Cheque' },
+    { value: 'other', label: 'Other' }
+  ];
+
   const handleFilterChange = (field, value) => {
     const newFilters = { ...filters, [field]: value };
     setFilters(newFilters);
@@ -39,6 +52,7 @@ const ExpenseFilters = ({ onFiltersChange, totalExpenses }) => {
     const clearedFilters = {
       search: '',
       category: '',
+      paymentMethod: '',
       dateFrom: '',
       dateTo: '',
       minAmount: '',
@@ -80,7 +94,7 @@ const ExpenseFilters = ({ onFiltersChange, totalExpenses }) => {
           onChange={(e) => handleFilterChange('search', e?.target?.value)}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Select
             label="Category"
             options={categories}
@@ -90,6 +104,17 @@ const ExpenseFilters = ({ onFiltersChange, totalExpenses }) => {
             error=""
             id="category-filter"
             name="category"
+          />
+
+          <Select
+            label="Payment Method"
+            options={paymentMethods}
+            value={filters?.paymentMethod}
+            onChange={(value) => handleFilterChange('paymentMethod', value)}
+            description=""
+            error=""
+            id="payment-method-filter"
+            name="paymentMethod"
           />
 
           <Input

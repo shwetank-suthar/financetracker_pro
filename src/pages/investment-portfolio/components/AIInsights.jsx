@@ -15,7 +15,7 @@ const AIInsights = ({ portfolioData, userRiskProfile, className = "" }) => {
     holdings: [
       { symbol: 'AAPL', shares: 10, currentPrice: 150, costBasis: 145, sector: 'Technology' },
       { symbol: 'GOOGL', shares: 5, currentPrice: 2800, costBasis: 2750, sector: 'Technology' },
-      { symbol: 'MSFT', shares: 8, currentPrice: 380, currentPrice: 375, sector: 'Technology' },
+      { symbol: 'MSFT', shares: 8, currentPrice: 380, costBasis: 375, sector: 'Technology' },
       { symbol: 'TSLA', shares: 3, currentPrice: 250, costBasis: 280, sector: 'Automotive' },
       { symbol: 'AMZN', shares: 4, currentPrice: 3200, costBasis: 3100, sector: 'E-commerce' }
     ],

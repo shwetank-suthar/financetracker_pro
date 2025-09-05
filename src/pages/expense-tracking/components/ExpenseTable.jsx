@@ -39,6 +39,48 @@ const ExpenseTable = ({ expenses, onEditExpense, onDeleteExpense, onBulkAction }
     return colors?.[category] || 'text-gray-600';
   };
 
+  const getPaymentMethodIcon = (paymentMethod) => {
+    const icons = {
+      cash: 'Banknote',
+      'credit-card': 'CreditCard',
+      'debit-card': 'CreditCard',
+      upi: 'Smartphone',
+      'net-banking': 'Monitor',
+      wallet: 'Wallet',
+      cheque: 'FileText',
+      other: 'MoreHorizontal'
+    };
+    return icons?.[paymentMethod] || 'MoreHorizontal';
+  };
+
+  const getPaymentMethodColor = (paymentMethod) => {
+    const colors = {
+      cash: 'text-green-600',
+      'credit-card': 'text-blue-600',
+      'debit-card': 'text-indigo-600',
+      upi: 'text-purple-600',
+      'net-banking': 'text-cyan-600',
+      wallet: 'text-orange-600',
+      cheque: 'text-gray-600',
+      other: 'text-gray-600'
+    };
+    return colors?.[paymentMethod] || 'text-gray-600';
+  };
+
+  const getPaymentMethodLabel = (paymentMethod) => {
+    const labels = {
+      cash: 'Cash',
+      'credit-card': 'Credit Card',
+      'debit-card': 'Debit Card',
+      upi: 'UPI',
+      'net-banking': 'Net Banking',
+      wallet: 'Digital Wallet',
+      cheque: 'Cheque',
+      other: 'Other'
+    };
+    return labels?.[paymentMethod] || 'Other';
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString)?.toLocaleDateString('en-US', {
       month: 'short',
@@ -71,8 +113,10 @@ const ExpenseTable = ({ expenses, onEditExpense, onDeleteExpense, onBulkAction }
         ? new Date(a.date) - new Date(b.date)
         : new Date(b.date) - new Date(a.date);
     }
-    const aValue = a?.[sortConfig?.key]?.toString()?.toLowerCase() || '';
-    const bValue = b?.[sortConfig?.key]?.toString()?.toLowerCase() || '';
+    // Handle payment_method field mapping
+    const sortKey = sortConfig?.key === 'paymentMethod' ? 'payment_method' : sortConfig?.key;
+    const aValue = a?.[sortKey]?.toString()?.toLowerCase() || '';
+    const bValue = b?.[sortKey]?.toString()?.toLowerCase() || '';
     return sortConfig?.direction === 'asc' 
       ? aValue?.localeCompare(bValue)
       : bValue?.localeCompare(aValue);
@@ -179,6 +223,9 @@ const ExpenseTable = ({ expenses, onEditExpense, onDeleteExpense, onBulkAction }
               <th className="p-4 text-left">
                 <SortButton column="amount">Amount</SortButton>
               </th>
+              <th className="p-4 text-left">
+                <SortButton column="paymentMethod">Payment Method</SortButton>
+              </th>
               <th className="p-4 text-left">Tags</th>
               <th className="p-4 text-left">Actions</th>
             </tr>
@@ -216,6 +263,16 @@ const ExpenseTable = ({ expenses, onEditExpense, onDeleteExpense, onBulkAction }
                 </td>
                 <td className="p-4 font-medium text-card-foreground">
                   {formatAmount(expense?.amount)}
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Icon 
+                      name={getPaymentMethodIcon(expense?.payment_method)} 
+                      size={16} 
+                      className={getPaymentMethodColor(expense?.payment_method)}
+                    />
+                    <span className="text-sm">{getPaymentMethodLabel(expense?.payment_method)}</span>
+                  </div>
                 </td>
                 <td className="p-4">
                   <div className="flex flex-wrap gap-1">
@@ -280,6 +337,14 @@ const ExpenseTable = ({ expenses, onEditExpense, onDeleteExpense, onBulkAction }
             <div>
               <h4 className="font-medium text-card-foreground">{expense?.description}</h4>
               <p className="text-lg font-semibold text-primary">{formatAmount(expense?.amount)}</p>
+              <div className="flex items-center space-x-2 mt-1">
+                <Icon 
+                  name={getPaymentMethodIcon(expense?.payment_method)} 
+                  size={14} 
+                  className={getPaymentMethodColor(expense?.payment_method)}
+                />
+                <span className="text-xs text-muted-foreground">{getPaymentMethodLabel(expense?.payment_method)}</span>
+              </div>
             </div>
             
             {expense?.tags && expense?.tags?.length > 0 && (

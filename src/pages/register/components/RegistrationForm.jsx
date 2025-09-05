@@ -4,10 +4,12 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { useAuth } from '../../../contexts/AuthContext';
 
 
 const RegistrationForm = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -165,16 +167,17 @@ const RegistrationForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Registration data:', formData);
+      await signUp(formData.email, formData.password, {
+        full_name: formData.fullName,
+        primary_currency: formData.primaryCurrency,
+        financial_goals: formData.financialGoals
+      });
       
       // Navigate to dashboard on success
       navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
-      setErrors({ submit: 'Registration failed. Please try again.' });
+      setErrors({ submit: error.message || 'Registration failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

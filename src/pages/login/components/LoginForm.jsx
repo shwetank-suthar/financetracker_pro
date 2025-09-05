@@ -4,9 +4,11 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,12 +17,6 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  // Mock credentials for authentication
-  const mockCredentials = {
-    email: 'john.smith@email.com',
-    password: 'Finance123!'
-  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -64,29 +60,11 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Check credentials
-      if (formData?.email === mockCredentials?.email && formData?.password === mockCredentials?.password) {
-        // Store authentication state
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData?.email);
-        
-        if (formData?.rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-        }
-        
-        // Navigate to dashboard
-        navigate('/dashboard');
-      } else {
-        setErrors({
-          general: `Invalid credentials. Use email: ${mockCredentials?.email} and password: ${mockCredentials?.password}`
-        });
-      }
+      await signIn(formData.email, formData.password);
+      navigate('/dashboard');
     } catch (error) {
       setErrors({
-        general: 'Network error. Please check your connection and try again.'
+        general: error.message || 'Invalid email or password. Please try again.'
       });
     } finally {
       setIsLoading(false);

@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { expenseService } from '../../services/supabaseService';
 import Icon from '../AppIcon';
 import Button from './Button';
 import Input from './Input';
 import Select from './Select';
 
-const QuickAddExpense = () => {
+const QuickAddExpense = ({ onExpenseAdded }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
     description: '',
+    payment_method: 'cash',
     date: new Date()?.toISOString()?.split('T')?.[0]
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const categories = [
     { value: 'food', label: 'Food & Dining' },
@@ -25,6 +30,15 @@ const QuickAddExpense = () => {
     { value: 'other', label: 'Other' }
   ];
 
+  const paymentMethods = [
+    { value: 'cash', label: 'Cash' },
+    { value: 'credit-card', label: 'Credit Card' },
+    { value: 'debit-card', label: 'Debit Card' },
+    { value: 'upi', label: 'UPI' },
+    { value: 'net-banking', label: 'Net Banking' },
+    { value: 'wallet', label: 'Digital Wallet' }
+  ];
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -35,24 +49,43 @@ const QuickAddExpense = () => {
   const handleSubmit = async (e) => {
     e?.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user) {
+        throw new Error('You must be logged in to add expenses');
+      }
+
+      const expenseData = {
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        description: formData.description || 'Quick expense',
+        payment_method: formData.payment_method,
+        date: formData.date
+      };
+
+      const newExpense = await expenseService.createExpense(expenseData);
       
-      console.log('Expense added:', formData);
+      console.log('Expense added:', newExpense);
       
       // Reset form
       setFormData({
         amount: '',
         category: '',
         description: '',
+        payment_method: 'cash',
         date: new Date()?.toISOString()?.split('T')?.[0]
       });
       
       setIsOpen(false);
+      
+      // Notify parent component if callback provided
+      if (onExpenseAdded) {
+        onExpenseAdded(newExpense);
+      }
     } catch (error) {
       console.error('Error adding expense:', error);
+      setError(error.message || 'Failed to add expense. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -98,6 +131,15 @@ const QuickAddExpense = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <Icon name="AlertCircle" size={16} className="text-red-600" />
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              )}
+
               <Input
                 label="Amount"
                 type="number"
@@ -118,6 +160,19 @@ const QuickAddExpense = () => {
                 required
                 id="category"
                 name="category"
+                description=""
+                error=""
+              />
+
+              <Select
+                label="Payment Method"
+                placeholder="Select payment method"
+                options={paymentMethods}
+                value={formData?.payment_method}
+                onChange={(value) => handleInputChange('payment_method', value)}
+                required
+                id="payment_method"
+                name="payment_method"
                 description=""
                 error=""
               />

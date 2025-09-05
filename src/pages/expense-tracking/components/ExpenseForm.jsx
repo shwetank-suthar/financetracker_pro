@@ -3,6 +3,7 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
+import { expenseService } from '../../../services/supabaseService';
 
 const ExpenseForm = ({ onAddExpense }) => {
   const [formData, setFormData] = useState({
@@ -10,7 +11,8 @@ const ExpenseForm = ({ onAddExpense }) => {
     category: '',
     description: '',
     date: new Date()?.toISOString()?.split('T')?.[0],
-    tags: ''
+    tags: '',
+    paymentMethod: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestedCategory, setSuggestedCategory] = useState('');
@@ -25,6 +27,17 @@ const ExpenseForm = ({ onAddExpense }) => {
     { value: 'education', label: 'Education' },
     { value: 'groceries', label: 'Groceries' },
     { value: 'travel', label: 'Travel' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const paymentMethods = [
+    { value: 'cash', label: 'Cash' },
+    { value: 'credit-card', label: 'Credit Card' },
+    { value: 'debit-card', label: 'Debit Card' },
+    { value: 'upi', label: 'UPI' },
+    { value: 'net-banking', label: 'Net Banking' },
+    { value: 'wallet', label: 'Digital Wallet' },
+    { value: 'cheque', label: 'Cheque' },
     { value: 'other', label: 'Other' }
   ];
 
@@ -68,16 +81,16 @@ const ExpenseForm = ({ onAddExpense }) => {
 
     try {
       const newExpense = {
-        id: Date.now(),
         amount: parseFloat(formData?.amount),
         category: formData?.category,
         description: formData?.description,
         date: formData?.date,
         tags: formData?.tags?.split(',')?.map(tag => tag?.trim())?.filter(tag => tag),
-        createdAt: new Date()?.toISOString()
+        payment_method: formData?.paymentMethod
       };
 
-      onAddExpense(newExpense);
+      const createdExpense = await expenseService.createExpense(newExpense);
+      onAddExpense(createdExpense);
 
       // Reset form
       setFormData({
@@ -85,17 +98,19 @@ const ExpenseForm = ({ onAddExpense }) => {
         category: '',
         description: '',
         date: new Date()?.toISOString()?.split('T')?.[0],
-        tags: ''
+        tags: '',
+        paymentMethod: ''
       });
       setSuggestedCategory('');
     } catch (error) {
       console.error('Error adding expense:', error);
+      // You could add error handling UI here
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isFormValid = formData?.amount && formData?.category && formData?.description;
+  const isFormValid = formData?.amount && formData?.category && formData?.description && formData?.paymentMethod;
 
   return (
     <div className="bg-card rounded-lg border border-border p-6 shadow-subtle">
@@ -161,6 +176,19 @@ const ExpenseForm = ({ onAddExpense }) => {
           id="category"
           name="category"
           description=""
+          error=""
+        />
+
+        <Select
+          label="Payment Method"
+          placeholder="How did you pay?"
+          options={paymentMethods}
+          value={formData?.paymentMethod}
+          onChange={(value) => handleInputChange('paymentMethod', value)}
+          required
+          id="paymentMethod"
+          name="paymentMethod"
+          description="Select the payment method used for this expense"
           error=""
         />
 

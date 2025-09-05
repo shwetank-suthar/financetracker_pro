@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '../../components/ui/Header';
+import IndianInvestmentTracker from '../../components/investment/IndianInvestmentTracker';
 import PortfolioOverview from './components/PortfolioOverview';
 import InvestmentTabs from './components/InvestmentTabs';
 import InvestmentCard from './components/InvestmentCard';
@@ -7,8 +8,10 @@ import PerformanceChart from './components/PerformanceChart';
 import QuickActions from './components/QuickActions';
 import AIInsights from './components/AIInsights';
 import Icon from '../../components/AppIcon';
+import Button from '../../components/ui/Button';
 
 const InvestmentPortfolio = () => {
+  const [activeView, setActiveView] = useState('portfolio'); // 'portfolio' or 'real-time'
   const [activeTab, setActiveTab] = useState('all');
   const [timeRange, setTimeRange] = useState('1M');
   const [searchQuery, setSearchQuery] = useState('');
@@ -196,78 +199,109 @@ const InvestmentPortfolio = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Icon name="Search" size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search investments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e?.target?.value)}
-                className="pl-10 pr-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+            {/* View Toggle */}
+            <div className="flex bg-muted rounded-lg p-1">
+              <Button
+                variant={activeView === 'portfolio' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveView('portfolio')}
+                iconName="PieChart"
+                iconPosition="left"
+              >
+                Portfolio
+              </Button>
+              <Button
+                variant={activeView === 'real-time' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveView('real-time')}
+                iconName="TrendingUp"
+                iconPosition="left"
+              >
+                Real-time
+              </Button>
             </div>
-          </div>
-        </div>
-
-        {/* Portfolio Overview */}
-        <PortfolioOverview portfolioData={portfolioData} />
-
-        {/* Performance Chart */}
-        <div className="mb-8">
-          <PerformanceChart 
-            data={performanceData} 
-            timeRange={timeRange} 
-            onTimeRangeChange={setTimeRange} 
-          />
-        </div>
-
-        {/* Quick Actions */}
-        <QuickActions />
-
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="xl:col-span-3">
-            {/* Investment Tabs */}
-            <InvestmentTabs 
-              activeTab={activeTab} 
-              onTabChange={setActiveTab} 
-              tabsData={tabsData} 
-            />
-
-            {/* Investments Grid */}
-            {filteredInvestments?.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredInvestments?.map((investment) => (
-                  <InvestmentCard key={investment?.id} investment={investment} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-lg p-12 text-center">
-                <Icon name="PieChart" size={48} className="mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                  No investments found
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  {searchQuery 
-                    ? `No investments match "${searchQuery}"`
-                    : 'Start building your portfolio by adding your first investment'
-                  }
-                </p>
-                {!searchQuery && (
-                  <button className="flex items-center space-x-2 mx-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth">
-                    <Icon name="Plus" size={16} />
-                    <span>Add Investment</span>
-                  </button>
-                )}
+            
+            {activeView === 'portfolio' && (
+              <div className="relative">
+                <Icon name="Search" size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search investments..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e?.target?.value)}
+                  className="pl-10 pr-4 py-2 border border-border rounded-lg bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
               </div>
             )}
           </div>
-
-          {/* Sidebar */}
-          <div className="xl:col-span-1">
-            <AIInsights insights={aiInsights} />
-          </div>
         </div>
+
+        {/* Content based on active view */}
+        {activeView === 'real-time' ? (
+          <IndianInvestmentTracker />
+        ) : (
+          <>
+            {/* Portfolio Overview */}
+            <PortfolioOverview portfolioData={portfolioData} />
+
+            {/* Performance Chart */}
+            <div className="mb-8">
+              <PerformanceChart 
+                data={performanceData} 
+                timeRange={timeRange} 
+                onTimeRangeChange={setTimeRange} 
+              />
+            </div>
+
+            {/* Quick Actions */}
+            <QuickActions />
+
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+              {/* Main Content */}
+              <div className="xl:col-span-3">
+                {/* Investment Tabs */}
+                <InvestmentTabs 
+                  activeTab={activeTab} 
+                  onTabChange={setActiveTab} 
+                  tabsData={tabsData} 
+                />
+
+                {/* Investments Grid */}
+                {filteredInvestments?.length > 0 ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {filteredInvestments?.map((investment) => (
+                      <InvestmentCard key={investment?.id} investment={investment} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-card border border-border rounded-lg p-12 text-center">
+                    <Icon name="PieChart" size={48} className="mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold text-card-foreground mb-2">
+                      No investments found
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      {searchQuery 
+                        ? `No investments match "${searchQuery}"`
+                        : 'Start building your portfolio by adding your first investment'
+                      }
+                    </p>
+                    {!searchQuery && (
+                      <button className="flex items-center space-x-2 mx-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth">
+                        <Icon name="Plus" size={16} />
+                        <span>Add Investment</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Sidebar */}
+              <div className="xl:col-span-1">
+                <AIInsights insights={aiInsights} />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
