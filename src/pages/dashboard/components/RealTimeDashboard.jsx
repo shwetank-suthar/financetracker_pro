@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext'
 import { expenseService, accountService, budgetService, investmentService } from '../../../services/supabaseService'
 import { generateFinancialInsights } from '../../../services/openaiService'
@@ -12,6 +13,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const RealTimeDashboard = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   
   const [expenses, setExpenses] = useState([])
   const [accounts, setAccounts] = useState([])
@@ -290,9 +292,19 @@ const RealTimeDashboard = () => {
               {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Never'}
             </p>
           </div>
-                        <QuickAddExpense onExpenseAdded={loadDashboardData} />
-              <QuickAddInvestment onInvestmentAdded={loadDashboardData} />
-              <QuickAddSalary onSalaryAdded={loadDashboardData} />
+          <QuickAddExpense onExpenseAdded={loadDashboardData} />
+          <QuickAddInvestment onInvestmentAdded={loadDashboardData} />
+          <QuickAddSalary onSalaryAdded={loadDashboardData} />
+          <Button
+            onClick={() => navigate('/product-search')}
+            variant="default"
+            size="sm"
+            iconName="Search"
+            iconPosition="left"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
+          >
+            Search Products with AI
+          </Button>
           <Button
             onClick={loadDashboardData}
             loading={loading}
@@ -317,7 +329,7 @@ const RealTimeDashboard = () => {
       )}
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {/* Salary Balance */}
         <SalaryBalanceCard onRefresh={lastUpdated} />
 
@@ -384,6 +396,21 @@ const RealTimeDashboard = () => {
               </p>
             </div>
             <Icon name="Heart" size={24} className="text-warning" />
+          </div>
+        </div>
+
+        {/* Product Search with AI */}
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-6 cursor-pointer hover:shadow-lg transition-all duration-200" onClick={() => navigate('/product-search')}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-700">Smart Shopping</p>
+              <p className="text-lg font-bold text-blue-900">Find Deals</p>
+              <p className="text-xs text-blue-600 mt-1">Compare prices across platforms</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <Icon name="Search" size={24} className="text-blue-600 mb-1" />
+              <Icon name="Sparkles" size={16} className="text-purple-500" />
+            </div>
           </div>
         </div>
       </div>

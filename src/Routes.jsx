@@ -9,6 +9,7 @@ import Dashboard from './pages/dashboard';
 import ReportsAnalytics from './pages/reports-analytics';
 import Register from './pages/register';
 import ExpenseTracking from './pages/expense-tracking';
+import ProductSearch from './pages/product-search';
 
 const Routes = () => {
   return (
@@ -24,6 +25,7 @@ const Routes = () => {
         <Route path="/reports-analytics" element={<ReportsAnalytics />} />
         <Route path="/register" element={<Register />} />
         <Route path="/expense-tracking" element={<ExpenseTracking />} />
+        <Route path="/product-search" element={<ProductSearch />} />
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
       </ErrorBoundary>

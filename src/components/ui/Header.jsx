@@ -33,6 +33,12 @@ const Header = () => {
       path: '/reports-analytics',
       icon: 'BarChart3',
       tooltip: 'Advanced analytics and AI-powered insights'
+    },
+    {
+      label: 'Product Search',
+      path: '/product-search',
+      icon: 'Search',
+      tooltip: 'Find and compare products across Indian e-commerce platforms'
     }
   ];
 
@@ -79,8 +85,13 @@ const Header = () => {
         {/* Right Side Actions */}
         <div className="flex items-center space-x-3">
           <QuickAddExpense />
-          <NotificationCenter />
-          <UserProfileDropdown />
+          {/* Hide notifications and profile on product search page */}
+          {location?.pathname !== '/product-search' && (
+            <>
+              <NotificationCenter />
+              <UserProfileDropdown />
+            </>
+          )}
           
           {/* Mobile Menu Button */}
           <button
