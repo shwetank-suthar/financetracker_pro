@@ -139,7 +139,7 @@ const AIInsightsWidget = ({ financialData, userProfile, className = "" }) => {
               </p>
             </div>
             <div className="text-xs text-gray-500 border-t pt-2">
-              Generated on {new Date(insights.timestamp)?.toLocaleDateString()}
+              Generated on {insights?.timestamp ? new Date(insights.timestamp).toLocaleDateString() : new Date().toLocaleDateString()}
             </div>
           </div>
         )}

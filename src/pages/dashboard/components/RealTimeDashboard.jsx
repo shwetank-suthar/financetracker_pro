@@ -7,9 +7,9 @@ import Icon from '../../../components/AppIcon'
 import Button from '../../../components/ui/Button'
 import QuickAddExpense from '../../../components/ui/QuickAddExpense'
 import QuickAddInvestment from '../../../components/ui/QuickAddInvestment'
-import QuickAddSalary from '../../../components/ui/QuickAddSalary'
 import SalaryBalanceCard from '../../../components/ui/SalaryBalanceCard'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
+import voiceService from '../../../services/voiceService'
 
 const RealTimeDashboard = () => {
   const { user } = useAuth()
@@ -23,6 +23,11 @@ const RealTimeDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
+  
+  // Voice command states
+  const [isListening, setIsListening] = useState(false)
+  const [voiceError, setVoiceError] = useState(null)
+  const [voiceInfo, setVoiceInfo] = useState('')
 
   const generateAIInsights = useCallback(async (expensesData, accountsData, investmentsData) => {
     try {
@@ -93,6 +98,80 @@ const RealTimeDashboard = () => {
   portfolioTotals.totalGainLossPercent = portfolioTotals.totalInvested > 0 
     ? (portfolioTotals.totalGainLoss / portfolioTotals.totalInvested) * 100 
     : 0
+
+  // Voice command handler
+  const handleVoiceCommand = () => {
+    setVoiceError(null)
+    setVoiceInfo('')
+    
+    if (!voiceService.isSupported()) {
+      setVoiceError('Voice recognition is not supported in this browser.')
+      return
+    }
+    
+    const rec = voiceService.createRecognition({ continuous: false, interimResults: false })
+    if (!rec) return
+
+    setIsListening(true)
+
+    rec.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || ''
+      handleVoiceTranscript(transcript)
+    }
+    
+    rec.onerror = () => {
+      setVoiceError('Could not capture voice. Please try again.')
+    }
+    
+    rec.onend = () => setIsListening(false)
+    rec.start()
+  }
+
+  const handleVoiceTranscript = (text) => {
+    const lower = text.toLowerCase().trim()
+    
+    // Navigation commands
+    if (/go to|navigate to|open|show/.test(lower)) {
+      if (/expense|spending/.test(lower)) {
+        navigate('/expense-tracking')
+        setVoiceInfo('Navigating to expense tracking...')
+      } else if (/investment|portfolio/.test(lower)) {
+        navigate('/investment-portfolio')
+        setVoiceInfo('Navigating to investment portfolio...')
+      } else if (/report|analytics/.test(lower)) {
+        navigate('/reports-analytics')
+        setVoiceInfo('Navigating to reports...')
+      } else if (/product|search|shop/.test(lower)) {
+        navigate('/product-search')
+        setVoiceInfo('Navigating to product search...')
+      } else if (/dashboard|home/.test(lower)) {
+        navigate('/dashboard')
+        setVoiceInfo('Navigating to dashboard...')
+      }
+    }
+    // Quick actions
+    else if (/add expense|spent|bought/.test(lower)) {
+      navigate('/expense-tracking')
+      setVoiceInfo('Opening expense tracker to add expense...')
+    }
+    else if (/add investment|invest/.test(lower)) {
+      navigate('/investment-portfolio')
+      setVoiceInfo('Opening investment portfolio...')
+    }
+    else if (/search product|find product|buy/.test(lower)) {
+      navigate('/product-search')
+      setVoiceInfo('Opening product search...')
+    }
+    // General queries
+    else if (/how much|total|balance|summary/.test(lower)) {
+      const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0)
+      const totalInvestments = investments.reduce((sum, i) => sum + (i.current_value || 0), 0)
+      setVoiceInfo(`Total expenses: ₹${totalExpenses.toLocaleString()}, Investments: ₹${totalInvestments.toLocaleString()}`)
+    }
+    else {
+      setVoiceInfo(`I heard: "${text}". Try saying "go to expense tracking" or "add expense"`)
+    }
+  }
 
   // Auto-refresh disabled for better performance
   // useEffect(() => {
@@ -294,7 +373,17 @@ const RealTimeDashboard = () => {
           </div>
           <QuickAddExpense onExpenseAdded={loadDashboardData} />
           <QuickAddInvestment onInvestmentAdded={loadDashboardData} />
-          <QuickAddSalary onSalaryAdded={loadDashboardData} />
+          <Button
+            onClick={handleVoiceCommand}
+            variant="default"
+            size="sm"
+            iconName={isListening ? "Mic" : "Mic"}
+            iconPosition="left"
+            className={`${isListening ? 'bg-green-600 hover:bg-green-700' : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'} text-white border-0`}
+            loading={isListening}
+          >
+            {isListening ? 'Listening...' : 'Voice Commands'}
+          </Button>
           <Button
             onClick={() => navigate('/product-search')}
             variant="default"
@@ -324,6 +413,27 @@ const RealTimeDashboard = () => {
           <div className="flex items-center space-x-2">
             <Icon name="AlertCircle" size={16} className="text-red-600" />
             <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Voice Command Feedback */}
+      {(voiceError || voiceInfo) && (
+        <div className={`border rounded-lg p-4 ${voiceError ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+          <div className="flex items-center space-x-2">
+            <Icon name={voiceError ? "AlertCircle" : "Mic"} size={16} className={voiceError ? "text-red-600" : "text-blue-600"} />
+            <p className={`text-sm ${voiceError ? 'text-red-700' : 'text-blue-700'}`}>
+              {voiceError || voiceInfo}
+            </p>
+            <Button
+              onClick={() => {
+                setVoiceError(null)
+                setVoiceInfo('')
+              }}
+              variant="ghost"
+              size="sm"
+              iconName="X"
+            />
           </div>
         </div>
       )}

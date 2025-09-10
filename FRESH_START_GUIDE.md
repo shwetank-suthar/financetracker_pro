@@ -1,132 +1,119 @@
-# Fresh Start Guide - Reset Database
+# 🗑️ Fresh Start Guide - Clear All Data
 
-## 🚨 **Warning**
-This will delete **ALL** data from your database and start completely fresh!
+## ⚠️ **WARNING: This will permanently delete ALL data!**
 
-## 🔄 **What Gets Deleted**
+This guide will help you completely reset your FinanceTracker Pro database to a fresh state, as if you're starting from scratch.
 
-### **All Data Removed:**
-- ✅ **All Expenses** - Every expense record
-- ✅ **All Investments** - Every investment and SIP entry
-- ✅ **All Accounts** - Bank accounts, wallets, etc.
-- ✅ **All Budgets** - Budget plans and spending limits
-- ✅ **All Salaries** - Salary records and deductions
-- ✅ **All Income Sources** - Income source configurations
-- ✅ **All Categories** - Expense categories
-- ✅ **All Payment Methods** - Payment method configurations
-- ✅ **All Transactions** - Transaction history
-- ✅ **All User Profiles** - Public user data (auth users remain)
+## 🎯 **What Gets Deleted**
 
-### **What Stays:**
-- ✅ **Table Structure** - All tables and columns remain
-- ✅ **Database Schema** - Triggers, functions, policies remain
-- ✅ **Authentication** - Login credentials remain
-- ✅ **RLS Policies** - Security policies remain
+- ✅ All user accounts and profiles
+- ✅ All expenses and transactions
+- ✅ All investments and portfolios
+- ✅ All salary/income records
+- ✅ All SIP entries
+- ✅ All budgets and categories
+- ✅ All payment methods
+- ✅ All accounts and balances
 
-## 🚀 **Steps to Reset**
+## 🚀 **How to Clear All Data**
 
-### **Step 1: Run Reset Script**
-Execute this SQL in your Supabase SQL Editor:
+### **Option 1: Using the SQL Script (Recommended)**
+
+1. **Open your database management tool:**
+   - **Supabase**: Go to SQL Editor
+   - **Local PostgreSQL**: Use pgAdmin or psql command line
+   - **Other tools**: Any PostgreSQL client
+
+2. **Run the clear script:**
+```sql
+   -- Copy and paste the contents of clear-all-data.sql
+   -- Or run the file directly
+   ```
+
+3. **Verify the reset:**
+   - Check that all tables are empty
+   - Confirm default categories and payment methods are restored
+
+### **Option 2: Manual Table Clearing**
+
+If you prefer to clear tables manually:
 
 ```sql
--- Run the contents of reset-database-fresh-start.sql
+-- Clear in this exact order (due to foreign key constraints)
+DELETE FROM public.sip_entries;
+DELETE FROM public.salary_deductions;
+DELETE FROM public.salaries;
+DELETE FROM public.income_sources;
+DELETE FROM public.transactions;
+DELETE FROM public.budgets;
+DELETE FROM public.investments;
+DELETE FROM public.expenses;
+DELETE FROM public.accounts;
+DELETE FROM public.payment_methods;
+DELETE FROM public.categories;
+DELETE FROM public.users;
 ```
 
-### **Step 2: Verify Reset**
-After running the script, you should see:
-- ✅ **All tables show 0 records**
-- ✅ **Confirmation message displayed**
-- ✅ **Database ready for fresh data**
+### **Option 3: Drop and Recreate Database (Nuclear Option)**
 
-### **Step 3: Start Fresh**
-Now you can:
-1. **Register/Login** with your existing credentials
-2. **Add your salary** using "Add Salary" button
-3. **Add expenses** and see them deducted from salary
-4. **Add investments** and see them deducted from salary
-5. **Track everything** from a clean slate
+If you want to completely start over:
 
-## 📊 **What Happens After Reset**
+```sql
+-- Drop the entire database (if you have permissions)
+DROP DATABASE financetracker_pro;
 
-### **Dashboard:**
-- ✅ **Empty State** - No data, clean interface
-- ✅ **Ready for Input** - All "Add" buttons available
-- ✅ **Fresh Start** - No old data to confuse
+-- Recreate the database
+CREATE DATABASE financetracker_pro;
 
-### **Salary System:**
-- ✅ **Clean Slate** - No existing salary records
-- ✅ **Fresh Setup** - Add your salary from scratch
-- ✅ **New Tracking** - Start tracking deductions fresh
+-- Run the setup script again
+-- Execute setup-local-postgres.sql or supabase-schema.sql
+```
 
-### **Expenses & Investments:**
-- ✅ **No History** - Clean expense/investment history
-- ✅ **Fresh Categories** - No old categories
-- ✅ **New Tracking** - Start tracking fresh
+## ✅ **After Clearing Data**
 
-## 🎯 **Recommended Fresh Start Workflow**
+1. **Default Data Restored:**
+   - ✅ Default expense categories (Food, Transportation, etc.)
+   - ✅ Default payment methods (Cash, UPI, Credit Card, etc.)
 
-### **1. Add Your Salary First**
-- Go to Dashboard
-- Click "Add Salary"
-- Set your monthly salary (e.g., ₹50,000 on 10th)
-- This becomes your starting balance
+2. **Fresh Start:**
+   - ✅ No user accounts exist
+   - ✅ No expenses or investments
+   - ✅ Clean database ready for new users
 
-### **2. Add Some Test Expenses**
-- Use "Add Expense" to add a few expenses
-- Watch them automatically deduct from salary balance
-- Verify the system is working correctly
+3. **Next Steps:**
+   - ✅ Register a new user account
+   - ✅ Start adding expenses and investments
+   - ✅ Set up your financial goals
 
-### **3. Add Some Investments**
-- Use "Add Investment" to add investments
-- Watch them automatically deduct from salary balance
-- Verify SIP functionality if needed
+## 🔄 **Alternative: Keep Some Data**
 
-### **4. Explore Dashboard**
-- Check salary balance card
-- View expense/investment summaries
-- Test AI insights
-- Verify all features work
+If you want to keep some data but clear others:
 
-## ⚠️ **Important Notes**
+```sql
+-- Clear only expenses
+DELETE FROM public.expenses;
 
-### **Before Resetting:**
-- ✅ **Backup Important Data** - If you have any important records
-- ✅ **Note Your Salary Amount** - Remember your salary details
-- ✅ **Save Any Important Notes** - Any custom categories or settings
+-- Clear only investments
+DELETE FROM public.investments;
 
-### **After Resetting:**
-- ✅ **Re-add Your Salary** - Set up salary tracking again
-- ✅ **Re-create Categories** - Add any custom expense categories
-- ✅ **Re-add Payment Methods** - Set up payment methods if needed
-- ✅ **Test Everything** - Verify all features work correctly
+-- Clear only specific user's data
+DELETE FROM public.expenses WHERE user_id = 'your-user-id-here';
+DELETE FROM public.investments WHERE user_id = 'your-user-id-here';
+```
 
-## 🔧 **Troubleshooting**
+## 🛡️ **Backup Before Clearing (Recommended)**
 
-### **If Reset Fails:**
-- Check for foreign key constraint errors
-- Run the script in smaller chunks
-- Contact support if issues persist
+Before clearing all data, consider creating a backup:
 
-### **If Data Still Shows:**
-- Clear browser cache
-- Refresh the application
-- Check if you're looking at cached data
+```sql
+-- Create backup of specific tables
+CREATE TABLE expenses_backup AS SELECT * FROM public.expenses;
+CREATE TABLE investments_backup AS SELECT * FROM public.investments;
+CREATE TABLE users_backup AS SELECT * FROM public.users;
+```
 
-### **If Features Don't Work:**
-- Verify all tables are empty
-- Check database triggers are still active
-- Re-run the original schema scripts if needed
+## 🎉 **You're Ready for a Fresh Start!**
 
-## 🎉 **Benefits of Fresh Start**
+After running the clear script, your FinanceTracker Pro will be completely reset and ready for new users to sign up and start their financial journey from scratch.
 
-### **Clean Slate:**
-- ✅ **No Confusion** - No old data to mix up
-- ✅ **Fresh Learning** - Learn the system from scratch
-- ✅ **Clean Testing** - Test features without old data interference
-
-### **Better Understanding:**
-- ✅ **Clear Workflow** - See how the system works step by step
-- ✅ **Proper Setup** - Set up everything correctly from the beginning
-- ✅ **Full Control** - Control exactly what data you have
-
-Your database is now ready for a completely fresh start! 🚀
+**Remember:** This action cannot be undone, so make sure you really want to clear all data before proceeding!

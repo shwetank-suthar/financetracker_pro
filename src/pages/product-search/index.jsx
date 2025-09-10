@@ -3,7 +3,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import ProductSearchForm from './components/ProductSearchForm';
 import ProductResults from './components/ProductResults';
 import ProductComparison from './components/ProductComparison';
-import Header from '../../components/ui/Header';
 import productSearchService from '../../services/productSearchService';
 
 const ProductSearchPage = () => {
@@ -53,10 +52,7 @@ const ProductSearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Page Header */}
           <div className="text-center mb-8">
@@ -171,7 +167,6 @@ const ProductSearchPage = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import Icon from '../AppIcon';
 import Image from '../AppImage';
 
 const UserProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const { user, signOut, isAuthenticated } = useAuth();
 
-  const user = {
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    avatar: '/assets/images/avatar-placeholder.jpg'
-  };
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')?.[0] || 'User';
+  const displayEmail = user?.email || user?.user_metadata?.email;
+  const avatarUrl = user?.user_metadata?.avatar_url || '/assets/images/avatar-placeholder.jpg';
 
   const menuItems = [
     {
@@ -35,7 +36,14 @@ const UserProfileDropdown = () => {
     {
       label: 'Sign Out',
       icon: 'LogOut',
-      action: () => console.log('Sign out user'),
+      action: async () => {
+        try {
+          await signOut();
+          navigate('/login');
+        } catch (e) {
+          console.error('Error signing out', e);
+        }
+      },
       variant: 'destructive'
     }
   ];
@@ -57,6 +65,10 @@ const UserProfileDropdown = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -67,13 +79,13 @@ const UserProfileDropdown = () => {
         aria-haspopup="true"
       >
         <Image
-          src={user?.avatar}
-          alt={user?.name}
+          src={avatarUrl}
+          alt={displayName}
           className="w-8 h-8 rounded-full object-cover"
         />
         <div className="hidden sm:block text-left">
-          <p className="text-sm font-medium text-foreground">{user?.name}</p>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <p className="text-sm font-medium text-foreground">{displayName}</p>
+          <p className="text-xs text-muted-foreground">{displayEmail}</p>
         </div>
         <Icon 
           name="ChevronDown" 
@@ -86,13 +98,13 @@ const UserProfileDropdown = () => {
           <div className="p-4 border-b border-border">
             <div className="flex items-center space-x-3">
               <Image
-                src={user?.avatar}
-                alt={user?.name}
+                src={avatarUrl}
+                alt={displayName}
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div>
-                <p className="text-sm font-medium text-popover-foreground">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-sm font-medium text-popover-foreground">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{displayEmail}</p>
               </div>
             </div>
           </div>

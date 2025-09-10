@@ -4,16 +4,26 @@ import Image from '../../../components/AppImage';
 
 const InvestmentCard = ({ investment }) => {
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    const numAmount = parseFloat(amount) || 0;
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       minimumFractionDigits: 2
-    })?.format(amount);
+    })?.format(numAmount);
   };
 
   const formatPercentage = (percent) => {
-    return `${percent >= 0 ? '+' : ''}${percent?.toFixed(2)}%`;
+    const numPercent = parseFloat(percent) || 0;
+    return `${numPercent >= 0 ? '+' : ''}${numPercent.toFixed(2)}%`;
   };
+
+  // Calculate derived values from the investment data
+  const currentValue = parseFloat(investment?.current_value) || parseFloat(investment?.amount) || 0;
+  const investedAmount = parseFloat(investment?.invested_amount) || parseFloat(investment?.amount) || 0;
+  const gainLoss = currentValue - investedAmount;
+  const changePercent = investedAmount > 0 ? (gainLoss / investedAmount) * 100 : 0;
+  const quantity = parseFloat(investment?.quantity) || 1;
+  const currentPrice = quantity > 0 ? currentValue / quantity : currentValue;
 
   const getTypeIcon = (type) => {
     switch (type) {
@@ -62,17 +72,17 @@ const InvestmentCard = ({ investment }) => {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold text-card-foreground">{formatCurrency(investment?.currentValue)}</p>
+          <p className="text-lg font-bold text-card-foreground">{formatCurrency(currentValue)}</p>
           <div className="flex items-center space-x-1">
             <Icon 
-              name={investment?.changePercent >= 0 ? "ArrowUp" : "ArrowDown"} 
+              name={changePercent >= 0 ? "ArrowUp" : "ArrowDown"} 
               size={14} 
-              className={investment?.changePercent >= 0 ? "text-success" : "text-destructive"} 
+              className={changePercent >= 0 ? "text-success" : "text-destructive"} 
             />
             <span className={`text-sm font-medium ${
-              investment?.changePercent >= 0 ? "text-success" : "text-destructive"
+              changePercent >= 0 ? "text-success" : "text-destructive"
             }`}>
-              {formatPercentage(investment?.changePercent)}
+              {formatPercentage(changePercent)}
             </span>
           </div>
         </div>
@@ -80,36 +90,36 @@ const InvestmentCard = ({ investment }) => {
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-xs text-muted-foreground">Invested</p>
-          <p className="text-sm font-medium text-card-foreground">{formatCurrency(investment?.investedAmount)}</p>
+          <p className="text-sm font-medium text-card-foreground">{formatCurrency(investedAmount)}</p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Gain/Loss</p>
           <p className={`text-sm font-medium ${
-            investment?.gainLoss >= 0 ? "text-success" : "text-destructive"
+            gainLoss >= 0 ? "text-success" : "text-destructive"
           }`}>
-            {formatCurrency(investment?.gainLoss)}
+            {formatCurrency(gainLoss)}
           </p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Quantity</p>
-          <p className="text-sm font-medium text-card-foreground">{investment?.quantity}</p>
+          <p className="text-sm font-medium text-card-foreground">{quantity}</p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Current Price</p>
-          <p className="text-sm font-medium text-card-foreground">{formatCurrency(investment?.currentPrice)}</p>
+          <p className="text-sm font-medium text-card-foreground">{formatCurrency(currentPrice)}</p>
         </div>
       </div>
-      {investment?.type === 'fixed-deposit' && investment?.maturityDate && (
+      {investment?.type === 'fixed-deposit' && investment?.maturity_date && (
         <div className="border-t border-border pt-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Maturity Date</span>
             <span className="text-sm font-medium text-card-foreground">
-              {new Date(investment.maturityDate)?.toLocaleDateString()}
+              {new Date(investment.maturity_date).toLocaleDateString()}
             </span>
           </div>
           <div className="flex items-center justify-between mt-1">
             <span className="text-xs text-muted-foreground">Interest Rate</span>
-            <span className="text-sm font-medium text-card-foreground">{investment?.interestRate}%</span>
+            <span className="text-sm font-medium text-card-foreground">{investment?.interest_rate || 'N/A'}%</span>
           </div>
         </div>
       )}
@@ -117,11 +127,11 @@ const InvestmentCard = ({ investment }) => {
         <div className="border-t border-border pt-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">NAV</span>
-            <span className="text-sm font-medium text-card-foreground">{formatCurrency(investment?.nav)}</span>
+            <span className="text-sm font-medium text-card-foreground">{formatCurrency(investment?.nav || currentPrice)}</span>
           </div>
           <div className="flex items-center justify-between mt-1">
             <span className="text-xs text-muted-foreground">Expense Ratio</span>
-            <span className="text-sm font-medium text-card-foreground">{investment?.expenseRatio}%</span>
+            <span className="text-sm font-medium text-card-foreground">{investment?.expense_ratio || 'N/A'}%</span>
           </div>
         </div>
       )}

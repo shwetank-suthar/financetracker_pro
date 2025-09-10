@@ -5,15 +5,19 @@ const PortfolioOverview = ({ portfolioData }) => {
   const { totalValue, dailyChange, dailyChangePercent, assetAllocation } = portfolioData;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       minimumFractionDigits: 2
     })?.format(amount);
   };
 
   const formatPercentage = (percent) => {
     return `${percent >= 0 ? '+' : ''}${percent?.toFixed(2)}%`;
+  };
+
+  const formatAllocationPercentage = (percent) => {
+    return `${percent?.toFixed(2)}%`;
   };
 
   return (
@@ -60,7 +64,7 @@ const PortfolioOverview = ({ portfolioData }) => {
                 <span className="text-sm text-card-foreground">{asset?.name}</span>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-card-foreground">{asset?.percentage}%</p>
+                <p className="text-sm font-medium text-card-foreground">{formatAllocationPercentage(asset?.percentage)}</p>
                 <p className="text-xs text-muted-foreground">{formatCurrency(asset?.value)}</p>
               </div>
             </div>

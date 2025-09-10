@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import UserProfileDropdown from './UserProfileDropdown';
 import NotificationCenter from './NotificationCenter';
-import QuickAddExpense from './QuickAddExpense';
+import QuickAddSalary from './QuickAddSalary';
 
 const Header = () => {
   const location = useLocation();
@@ -84,7 +84,7 @@ const Header = () => {
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-3">
-          <QuickAddExpense />
+          <QuickAddSalary />
           {/* Hide notifications and profile on product search page */}
           {location?.pathname !== '/product-search' && (
             <>

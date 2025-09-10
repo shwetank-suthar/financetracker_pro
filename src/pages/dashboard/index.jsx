@@ -14,11 +14,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Real-time Dashboard */}
-        <RealTimeDashboard />
-      </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Real-time Dashboard */}
+      <RealTimeDashboard />
 
       {/* AI Financial Chat */}
       <AIFinancialChat financialContext={financialContext} />

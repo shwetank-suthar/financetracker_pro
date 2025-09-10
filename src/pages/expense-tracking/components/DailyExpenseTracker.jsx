@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
-import { expenseService } from '../../../services/supabaseService'
+import { expenseService, budgetService } from '../../../services/supabaseService'
 import { generateDailyExpenseInsights } from '../../../services/openaiService'
 import Icon from '../../../components/AppIcon'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import voiceService from '../../../services/voiceService'
 
 const DailyExpenseTracker = () => {
   const { user } = useAuth()
@@ -21,6 +22,11 @@ const DailyExpenseTracker = () => {
     description: '',
     paymentMethod: ''
   })
+  const [listening, setListening] = useState(false)
+  const [voiceError, setVoiceError] = useState(null)
+  const [voiceInfo, setVoiceInfo] = useState('')
+  const [voiceDraft, setVoiceDraft] = useState(null) // {amount, category, paymentMethod, description, date}
+  const [lastCreatedId, setLastCreatedId] = useState(null)
 
   // Load expenses for selected date
   useEffect(() => {
@@ -49,6 +55,117 @@ const DailyExpenseTracker = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVoiceCommand = () => {
+    setVoiceError(null)
+    if (!voiceService.isSupported()) {
+      setVoiceError('Voice recognition is not supported in this browser.')
+      return
+    }
+    const rec = voiceService.createRecognition({ continuous: false, interimResults: false })
+    if (!rec) return
+
+    setListening(true)
+
+    rec.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || ''
+      handleTranscript(transcript)
+    }
+    rec.onerror = () => {
+      setVoiceError('Could not capture voice. Please try again.')
+    }
+    rec.onend = () => setListening(false)
+    rec.start()
+  }
+
+  const handleTranscript = async (rawText) => {
+    const lower = rawText.toLowerCase().trim()
+    setVoiceInfo('')
+    // Undo last
+    if (/(undo|delete) (last|previous) (expense)?/.test(lower)) {
+      await undoLastExpense()
+      return
+    }
+    // Edit last expense (supports amount/category/method words)
+    if (/^edit (last|previous)/.test(lower)) {
+      const updates = parseFieldUpdates(lower)
+      await editLastExpense(updates)
+      return
+    }
+    // Budget query
+    if (/(what|how much).*(left|remaining).*(budget|in)/.test(lower) || /budget.*left/.test(lower)) {
+      await answerBudgetQuery(lower)
+      return
+    }
+    // Default: parse draft for add
+    const draft = parseExpenseDraft(lower)
+    setVoiceDraft(draft)
+  }
+
+  const parseFieldUpdates = (lower) => {
+    const updates = {}
+    const amountMatch = lower.match(/(?:rs\.?|inr|rupees|₹)?\s*(\d+(?:\.\d{1,2})?)/)
+    if (amountMatch) updates.amount = amountMatch[1]
+    const categories = ['food','transportation','shopping','entertainment','groceries','bills','healthcare','education','travel','other']
+    for (const c of categories) if (lower.includes(c)) { updates.category = c; break }
+    if (/upi|gpay|phonepe|paytm/.test(lower)) updates.payment_method = 'upi'
+    if (/credit/.test(lower)) updates.payment_method = 'credit-card'
+    if (/debit/.test(lower)) updates.payment_method = 'debit-card'
+    if (/cash/.test(lower)) updates.payment_method = 'cash'
+    return updates
+  }
+
+  const parseExpenseDraft = (text) => {
+    // Examples:
+    // "Add expense rupees 250 for lunch via upi"
+    // "Spent 1200 on groceries by credit card"
+    // "100 coffee cash"
+    const lower = text
+
+    // amount
+    const amountMatch = lower.match(/(?:rs\.?|inr|rupees|₹)?\s*(\d+(?:\.\d{1,2})?)/)
+    const amount = amountMatch ? amountMatch[1] : ''
+
+    // category keywords
+    const categoryMap = {
+      food: ['food', 'lunch', 'dinner', 'breakfast', 'coffee', 'restaurant'],
+      transportation: ['cab', 'uber', 'ola', 'bus', 'train', 'petrol', 'diesel', 'fuel'],
+      shopping: ['shopping', 'clothes', 'shoes', 'amazon', 'flipkart'],
+      entertainment: ['movie', 'netflix', 'entertainment'],
+      groceries: ['grocery', 'groceries'],
+      bills: ['bill', 'electricity', 'water', 'internet', 'mobile'],
+      healthcare: ['medicine', 'doctor', 'health', 'pharmacy'],
+      education: ['course', 'education', 'book'],
+      travel: ['flight', 'hotel', 'travel']
+    }
+    let category = ''
+    for (const [key, words] of Object.entries(categoryMap)) {
+      if (words.some(w => lower.includes(w))) { category = key; break }
+    }
+
+    // payment method
+    const methodMap = {
+      'upi': ['upi', 'gpay', 'phonepe', 'paytm'],
+      'credit-card': ['credit'],
+      'debit-card': ['debit'],
+      'cash': ['cash'],
+      'net-banking': ['net banking', 'bank transfer'],
+      'wallet': ['wallet']
+    }
+    let paymentMethod = ''
+    for (const [key, words] of Object.entries(methodMap)) {
+      if (words.some(w => lower.includes(w))) { paymentMethod = key; break }
+    }
+
+    // description fallback: remaining words
+    let description = lower
+      .replace(amountMatch?.[0] || '', '')
+      .replace(/via|by|with/g, '')
+      .trim()
+    if (!description) description = 'Voice expense'
+
+    return { amount, category, paymentMethod, description }
   }
 
   const generateDailyAIInsights = async (dayExpenses) => {
@@ -87,6 +204,7 @@ const DailyExpenseTracker = () => {
 
       const createdExpense = await expenseService.createExpense(newExpense)
       setExpenses(prev => [...prev, createdExpense])
+      setLastCreatedId(createdExpense.id)
       
       // Reset form
       setQuickAddExpense({
@@ -107,10 +225,12 @@ const DailyExpenseTracker = () => {
     }
   }
 
+
   const handleDeleteExpense = async (expenseId) => {
     try {
       await expenseService.deleteExpense(expenseId)
       setExpenses(prev => prev.filter(exp => exp.id !== expenseId))
+      if (lastCreatedId === expenseId) setLastCreatedId(null)
       
       // Regenerate AI insights
       const updatedExpenses = expenses.filter(exp => exp.id !== expenseId)
@@ -252,6 +372,45 @@ const DailyExpenseTracker = () => {
       <div className="bg-card rounded-lg border border-border p-6">
         <h3 className="text-lg font-semibold text-card-foreground mb-4">Quick Add Expense</h3>
         <form onSubmit={handleQuickAddExpense} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="md:col-span-2 lg:col-span-4 -mb-1 flex items-center space-x-2">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              iconName={listening ? 'Mic' : 'Mic'}
+              iconPosition="left"
+              onClick={handleVoiceCommand}
+              className={`${listening ? 'bg-green-600 hover:bg-green-700' : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'} text-white border-0`}
+              loading={listening}
+            >
+              {listening ? 'Listening…' : '🎤 Add by Voice'}
+            </Button>
+            {voiceError && <span className="text-xs text-red-600">{voiceError}</span>}
+            {voiceInfo && <span className="text-xs text-blue-600">{voiceInfo}</span>}
+          </div>
+          {voiceDraft && (
+            <div className="md:col-span-2 lg:col-span-4 -mt-2 mb-2 p-3 border border-border rounded bg-muted/50 text-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>Confirm:</strong>
+                  <span> {voiceDraft.description || 'expense'} • {voiceDraft.amount || '?'} • {voiceDraft.category || '?'} • {voiceDraft.paymentMethod || '?'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button type="button" size="sm" variant="default" onClick={() => {
+                    setQuickAddExpense(prev => ({
+                      ...prev,
+                      amount: voiceDraft.amount || prev.amount,
+                      category: voiceDraft.category || prev.category,
+                      paymentMethod: voiceDraft.paymentMethod || prev.paymentMethod,
+                      description: voiceDraft.description || prev.description
+                    }))
+                    setVoiceDraft(null)
+                  }}>Apply</Button>
+                  <Button type="button" size="sm" variant="outline" onClick={()=>setVoiceDraft(null)}>Dismiss</Button>
+                </div>
+              </div>
+            </div>
+          )}
           <Input
             label="Amount"
             type="number"
@@ -301,6 +460,7 @@ const DailyExpenseTracker = () => {
           </div>
         </form>
       </div>
+
 
       {/* Daily Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

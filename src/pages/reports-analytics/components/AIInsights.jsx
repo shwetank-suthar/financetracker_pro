@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Brain, TrendingUp, AlertTriangle, BarChart3, Target, RefreshCw } from 'lucide-react';
 import { generateFinancialInsights, getStructuredFinancialRecommendations, generateBudgetPlan } from '../../../services/openaiService';
 
-const AIInsights = ({ reportData, className = "" }) => {
-  const [insights, setInsights] = useState(null);
+const AIInsights = ({ insights: propInsights, reportData, className = "" }) => {
+  const [insights, setInsights] = useState(propInsights);
   const [recommendations, setRecommendations] = useState(null);
   const [budgetPlan, setBudgetPlan] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,13 @@ const AIInsights = ({ reportData, className = "" }) => {
   };
 
   useEffect(() => {
-    analyzeReports();
+    setInsights(propInsights);
+  }, [propInsights]);
+
+  useEffect(() => {
+    if (!propInsights) {
+      analyzeReports();
+    }
   }, [reportData]);
 
   const getPriorityColor = (priority) => {
@@ -85,9 +91,9 @@ const AIInsights = ({ reportData, className = "" }) => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     })?.format(amount);
   };
 
@@ -153,7 +159,7 @@ const AIInsights = ({ reportData, className = "" }) => {
         <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-md">
           <button
             onClick={() => setActiveTab('insights')}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-2 rounded text-xs sm:text-sm font-medium transition-colors text-center truncate ${
               activeTab === 'insights' ?'bg-white text-blue-600 shadow-sm' :'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -161,24 +167,27 @@ const AIInsights = ({ reportData, className = "" }) => {
           </button>
           <button
             onClick={() => setActiveTab('recommendations')}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-2 rounded text-xs sm:text-sm font-medium transition-colors text-center truncate ${
               activeTab === 'recommendations' ?'bg-white text-blue-600 shadow-sm' :'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Recommendations
+            <span className="hidden sm:inline">Recommendations</span>
+            <span className="sm:hidden">Recs</span>
           </button>
           <button
             onClick={() => setActiveTab('budget')}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-2 rounded text-xs sm:text-sm font-medium transition-colors text-center truncate ${
               activeTab === 'budget' ?'bg-white text-blue-600 shadow-sm' :'text-gray-600 hover:text-gray-900'
             }`}
           >
-            AI Budget
+            <span className="hidden sm:inline">AI Budget</span>
+            <span className="sm:hidden">Budget</span>
           </button>
         </div>
 
         {/* Content */}
-        {activeTab === 'insights' && insights && (
+        {activeTab === 'insights' && (
+          insights ? (
           <div className="space-y-4">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
               <h4 className="font-medium text-gray-900 mb-2 flex items-center space-x-2">
@@ -189,7 +198,7 @@ const AIInsights = ({ reportData, className = "" }) => {
                 {insights?.insights}
               </p>
               <div className="text-xs text-gray-500 mt-3 border-t border-blue-200 pt-2">
-                Generated on {new Date(insights.timestamp)?.toLocaleDateString()}
+                Generated on {insights?.timestamp ? new Date(insights.timestamp).toLocaleDateString() : new Date().toLocaleDateString()}
               </div>
             </div>
 
@@ -215,6 +224,12 @@ const AIInsights = ({ reportData, className = "" }) => {
               </div>
             </div>
           </div>
+          ) : (
+            <div className="text-center py-8">
+              <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No insights available yet. Add some expenses and investments to get AI-powered analysis.</p>
+            </div>
+          )
         )}
 
         {activeTab === 'recommendations' && recommendations && (

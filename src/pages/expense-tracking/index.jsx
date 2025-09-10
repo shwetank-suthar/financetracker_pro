@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Header from '../../components/ui/Header';
 import DailyExpenseTracker from './components/DailyExpenseTracker';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseFilters from './components/ExpenseFilters';
@@ -43,9 +42,7 @@ const ExpenseTracking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
@@ -60,7 +57,7 @@ const ExpenseTracking = () => {
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats - Removed until data is properly loaded */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center space-x-2">
@@ -68,10 +65,10 @@ const ExpenseTracking = () => {
                 <span className="text-sm font-medium text-muted-foreground">Total Expenses</span>
               </div>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {new Intl.NumberFormat('en-US', {
+                {new Intl.NumberFormat('en-IN', {
                   style: 'currency',
-                  currency: 'USD'
-                })?.format(totalExpenses)}
+                  currency: 'INR'
+                })?.format(0)}
               </p>
             </div>
 
@@ -81,10 +78,10 @@ const ExpenseTracking = () => {
                 <span className="text-sm font-medium text-muted-foreground">This Month</span>
               </div>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {new Intl.NumberFormat('en-US', {
+                {new Intl.NumberFormat('en-IN', {
                   style: 'currency',
-                  currency: 'USD'
-                })?.format(monthlyTotal)}
+                  currency: 'INR'
+                })?.format(0)}
               </p>
             </div>
 
@@ -93,7 +90,7 @@ const ExpenseTracking = () => {
                 <Icon name="Receipt" size={16} className="text-accent" />
                 <span className="text-sm font-medium text-muted-foreground">Transactions</span>
               </div>
-              <p className="text-2xl font-bold text-foreground mt-1">{filteredExpenses?.length}</p>
+              <p className="text-2xl font-bold text-foreground mt-1">0</p>
             </div>
 
             <div className="bg-card rounded-lg border border-border p-4">
@@ -102,10 +99,10 @@ const ExpenseTracking = () => {
                 <span className="text-sm font-medium text-muted-foreground">Avg/Day</span>
               </div>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {new Intl.NumberFormat('en-US', {
+                {new Intl.NumberFormat('en-IN', {
                   style: 'currency',
-                  currency: 'USD'
-                })?.format(monthlyTotal / 30)}
+                  currency: 'INR'
+                })?.format(0)}
               </p>
             </div>
           </div>
@@ -162,7 +159,6 @@ const ExpenseTracking = () => {
         {activeTab === 'export' && (
           <ExportOptions expenses={[]} />
         )}
-      </div>
     </div>
   );
 };

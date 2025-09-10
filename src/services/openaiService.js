@@ -10,7 +10,7 @@ import openai from './openaiClient';
 export async function getStructuredFinancialRecommendations(userProfile, goals = []) {
   try {
     const response = await openai?.chat?.completions?.create({
-      model: 'gpt-5',
+      model: 'gpt-4o-mini',
       messages: [
         { 
           role: 'system', 
@@ -128,7 +128,7 @@ export async function categorizeExpenses(transactions) {
 export async function analyzeInvestmentPortfolio(portfolio, riskProfile) {
   try {
     const response = await openai?.chat?.completions?.create({
-      model: 'gpt-5',
+      model: 'gpt-4o-mini',
       messages: [
         { 
           role: 'system', 
@@ -199,7 +199,7 @@ export async function analyzeInvestmentPortfolio(portfolio, riskProfile) {
 export async function generateBudgetPlan(income, expenses, goals = []) {
   try {
     const response = await openai?.chat?.completions?.create({
-      model: 'gpt-5',
+      model: 'gpt-4o-mini',
       messages: [
         { 
           role: 'system', 
